@@ -1,0 +1,39 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+postgres_data/
+rabbitmq_data/
+
+# Misc
+*.sqlite3
