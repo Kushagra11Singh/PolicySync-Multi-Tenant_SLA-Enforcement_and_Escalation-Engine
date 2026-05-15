@@ -90,7 +90,32 @@ Known issue:
 
 ---
 
-## Running locally
+### Running locally
+
+### Start services
 
 ```bash
 docker compose up --build
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Backend tests
+
+```bash
+docker compose run --rm policy_engine pytest tests/ -v
+```
+## Why I built this
+This project helped me learn:
+
+- distributed debugging
+- async workflows
+- service boundaries
+- observability
+- multi-tenant design
