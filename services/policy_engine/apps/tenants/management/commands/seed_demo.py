@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from shared.models import (
-    EscalationLog, EscalationRule, NotificationChannel,
+    EscalationRule, NotificationChannel,
     SLAPolicy, Tenant, Ticket, TicketStatus, User,
 )
 

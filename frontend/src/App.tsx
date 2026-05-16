@@ -1,91 +1,82 @@
-import { useState } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { LoginPage } from './pages/LoginPage'
 import { TicketsPage } from './pages/TicketsPage'
-import { PoliciesPage } from './pages/PoliciesPage'
 import { EscalationsPage } from './pages/EscalationsPage'
-import { Nav } from './components/Nav'
+import { PoliciesPage } from './pages/PoliciesPage'
 
-type Page = '/tickets' | '/policies' | '/escalations'
-
-export default function App() {
-  const { user, loading, logout } = useAuth()
-  const [page, setPage] = useState<Page>('/tickets')
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth()
 
   if (loading) {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', color: '#94a3b8', fontSize: 14,
+        justifyContent: 'center', color: '#64748b', fontSize: 14,
       }}>
-        Loading...
+        Loading…
       </div>
     )
   }
 
-  if (!user) {
-    return <LoginPage onSuccess={() => window.location.reload()} />
-  }
+  if (!user) return <Navigate to="/login" replace />
+  return <>{children}</>
+}
 
-  // System admin (no tenant) — guide them to the right tool
-  if (!user.tenant_name) {
+export default function App() {
+  const { user, loading, logout } = useAuth()
+
+  if (loading) {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', background: '#f8fafc',
+        justifyContent: 'center', color: '#64748b', fontSize: 14,
       }}>
-        <div style={{
-          background: '#fff', borderRadius: 12, padding: '36px 40px',
-          maxWidth: 480, boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-          textAlign: 'center',
-        }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>🔑</div>
-          <h2 style={{ margin: '0 0 8px', color: '#0f172a' }}>System Administrator</h2>
-          <p style={{ color: '#64748b', margin: '0 0 20px', lineHeight: 1.6 }}>
-            You're logged in as a platform admin with no tenant.
-            Use the API or Django admin to create tenants and users, then log in as a tenant user.
-          </p>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-            <a href="http://localhost:8001/admin/" target="_blank" rel="noreferrer"
-              style={{ ...linkBtn, background: '#6366f1', color: '#fff' }}>
-              Django Admin
-            </a>
-            <a href="http://localhost:8001/api/docs/" target="_blank" rel="noreferrer"
-              style={linkBtn}>
-              API Docs
-            </a>
-          </div>
-          <button
-            onClick={logout}
-            style={{ marginTop: 20, background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: 13 }}
-          >
-            Sign out
-          </button>
-        </div>
+        Loading…
       </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <Nav
-        user={user}
-        currentPath={page}
-        onNavigate={(p) => setPage(p as Page)}
-        onLogout={logout}
+    <Routes>
+      {/* Public */}
+      <Route
+        path="/login"
+        element={
+          user
+            ? <Navigate to="/tickets" replace />
+            : <LoginPage onSuccess={() => window.location.replace('/tickets')} />
+        }
       />
 
-      <main>
-        {page === '/tickets' && <TicketsPage currentUser={user} />}
-        {page === '/policies' && <PoliciesPage currentUser={user} />}
-        {page === '/escalations' && <EscalationsPage currentUser={user} />}
-      </main>
-    </div>
-  )
-}
+      {/* Protected */}
+      <Route
+        path="/tickets"
+        element={
+          <RequireAuth>
+            <TicketsPage currentUser={user!} onLogout={logout} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/escalations"
+        element={
+          <RequireAuth>
+            <EscalationsPage currentUser={user!} onLogout={logout} />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/policies"
+        element={
+          <RequireAuth>
+            <PoliciesPage currentUser={user!} onLogout={logout} />
+          </RequireAuth>
+        }
+      />
 
-const linkBtn: React.CSSProperties = {
-  padding: '9px 18px', border: '1px solid #e2e8f0',
-  borderRadius: 8, fontSize: 14, fontWeight: 500,
-  textDecoration: 'none', color: '#374151',
+      {/* Catch-all */}
+      <Route path="*" element={<Navigate to={user ? '/tickets' : '/login'} replace />} />
+    </Routes>
+  )
 }

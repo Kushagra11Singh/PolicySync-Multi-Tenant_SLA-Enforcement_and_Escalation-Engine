@@ -7,8 +7,7 @@ from shared.models import (
     SLAPolicy,
     Ticket,
     EscalationRule,
-    EscalationLog,
-    Tag,
+
 )
 
 

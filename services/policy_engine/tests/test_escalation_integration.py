@@ -14,7 +14,6 @@ class TestSLAEscalationIntegration:
 
     def test_full_escalation_flow(self, tenant, manager_user, sla_policy, escalation_rule):
         from tests.factories import TicketFactory
-        from shared.models import EscalationLog
         from apps.tickets.tasks import check_sla_breaches
 
         # Create ticket then manually backdate created_at and set deadline
