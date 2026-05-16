@@ -3,7 +3,8 @@ import type {
   PaginatedResponse,
   TicketListItem,
   TicketDetail,
-  EscalationLogItem
+  EscalationLogItem,
+  SLAPolicy,
 } from '../types'
 
 export interface TicketFilters {
@@ -15,11 +16,10 @@ export interface TicketFilters {
 
 export const getTickets = async (filters: TicketFilters = {}): Promise<PaginatedResponse<TicketListItem>> => {
   const params: Record<string, string> = {}
-  if (filters.status) params.status = filters.status
+  if (filters.status)   params.status   = filters.status
   if (filters.priority) params.priority = filters.priority
   if (filters.escalated) params.escalated = 'true'
-  if (filters.page) params.page = String(filters.page)
-
+  if (filters.page)     params.page     = String(filters.page)
   const res = await client.get<PaginatedResponse<TicketListItem>>('/tickets/', { params })
   return res.data
 }
@@ -52,5 +52,10 @@ export const addComment = async (ticketId: string, body: string, isInternal = fa
 export const getEscalationLogs = async (ticketId?: string): Promise<PaginatedResponse<EscalationLogItem>> => {
   const params = ticketId ? { ticket: ticketId } : {}
   const res = await client.get<PaginatedResponse<EscalationLogItem>>('/escalations/logs/', { params })
+  return res.data
+}
+
+export const getPolicies = async (): Promise<PaginatedResponse<SLAPolicy>> => {
+  const res = await client.get<PaginatedResponse<SLAPolicy>>('/policies/')
   return res.data
 }

@@ -1,12 +1,8 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useAuth } from '../hooks/useAuth'
+import { useAuth } from '../context/AuthContext'
 
-interface Props {
-  onSuccess: () => void
-}
-
-export function LoginPage({ onSuccess }: Props) {
+export function LoginPage() {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,9 +15,11 @@ export function LoginPage({ onSuccess }: Props) {
     setLoading(true)
     try {
       await login(email, password)
-      onSuccess()
-    } catch (err: any) {
-      const msg = err.response?.data?.non_field_errors?.[0] ?? 'Login failed.'
+      // App.tsx will re-render automatically because user state changed in AuthContext
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { non_field_errors?: string[] } } })
+          ?.response?.data?.non_field_errors?.[0] ?? 'Login failed. Check your credentials.'
       setError(msg)
     } finally {
       setLoading(false)
@@ -41,7 +39,7 @@ export function LoginPage({ onSuccess }: Props) {
           PolicySync
         </h1>
         <p style={{ margin: '0 0 28px', color: '#64748b', fontSize: 14 }}>
-          SLA Enforcement & Escalation Platform
+          SLA Enforcement &amp; Escalation Platform
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -73,15 +71,22 @@ export function LoginPage({ onSuccess }: Props) {
             type="submit"
             disabled={loading}
             style={{
-              width: '100%', padding: '11px 0', background: '#6366f1',
+              width: '100%', padding: '11px 0',
+              background: loading ? '#a5b4fc' : '#6366f1',
               color: '#fff', border: 'none', borderRadius: 8,
-              fontSize: 15, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1,
+              fontSize: 15, fontWeight: 600,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'background 0.15s',
             }}
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+
+        <div style={{ marginTop: 24, padding: '14px', background: '#f8fafc', borderRadius: 8, fontSize: 12, color: '#64748b' }}>
+          <strong style={{ display: 'block', marginBottom: 6, color: '#374151' }}>Demo accounts (password: Demo1234!)</strong>
+          admin@acme.com · manager@acme.com · agent1@acme.com
+        </div>
       </div>
     </div>
   )
@@ -93,7 +98,8 @@ const labelStyle: React.CSSProperties = {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', border: '1px solid #d1d5db',
-  borderRadius: 8, fontSize: 14, marginBottom: 16,
-  outline: 'none', boxSizing: 'border-box',
+  width: '100%', padding: '10px 12px',
+  border: '1px solid #d1d5db', borderRadius: 8,
+  fontSize: 14, marginBottom: 16,
+  outline: 'none', boxSizing: 'border-box', color: '#0f172a',
 }

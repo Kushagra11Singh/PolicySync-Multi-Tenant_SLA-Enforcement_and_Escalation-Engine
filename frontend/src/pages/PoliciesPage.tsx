@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Navbar } from '../components/Navbar'
-import { getPolicies } from '../api/policies'
-import type { User, SLAPolicy, PaginatedResponse } from '../types'
+import { getPolicies } from '../api/tickets'
+import type { User, SLAPolicy } from '../types'
 
 interface Props {
   currentUser: User
@@ -17,16 +17,11 @@ const PRIORITY_COLORS: Record<string, { bg: string; color: string }> = {
 
 function PolicyCard({ policy }: { policy: SLAPolicy }) {
   const pColor = PRIORITY_COLORS[policy.priority] ?? PRIORITY_COLORS.medium
-
   return (
     <div style={{
-      background: '#fff',
-      border: '1px solid #e2e8f0',
-      borderRadius: 10,
-      padding: '20px 22px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 14,
+      background: '#fff', border: '1px solid #e2e8f0',
+      borderRadius: 10, padding: '20px 22px',
+      display: 'flex', flexDirection: 'column', gap: 14,
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
@@ -34,25 +29,22 @@ function PolicyCard({ policy }: { policy: SLAPolicy }) {
             {policy.name}
           </div>
           {policy.description && (
-            <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>
-              {policy.description}
-            </div>
+            <div style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5 }}>{policy.description}</div>
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginLeft: 12 }}>
           <span style={{
             background: pColor.bg, color: pColor.color,
             fontSize: 11, fontWeight: 700,
-            padding: '2px 9px', borderRadius: 10, textTransform: 'uppercase',
-            letterSpacing: '0.05em',
+            padding: '2px 9px', borderRadius: 10,
+            textTransform: 'uppercase', letterSpacing: '0.05em',
           }}>
             {policy.priority}
           </span>
           {!policy.is_active && (
             <span style={{
               background: '#f1f5f9', color: '#94a3b8',
-              fontSize: 11, fontWeight: 600,
-              padding: '2px 9px', borderRadius: 10,
+              fontSize: 11, fontWeight: 600, padding: '2px 9px', borderRadius: 10,
             }}>
               Inactive
             </span>
@@ -61,7 +53,7 @@ function PolicyCard({ policy }: { policy: SLAPolicy }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-        <Stat label="Response SLA" value={`${policy.response_time_hours}h`} color="#6366f1" />
+        <Stat label="Response SLA"  value={`${policy.response_time_hours}h`}  color="#6366f1" />
         <Stat label="Resolution SLA" value={`${policy.resolution_time_hours}h`} color="#0ea5e9" />
         <Stat
           label="Open Tickets"
@@ -90,31 +82,29 @@ function Stat({ label, value, color }: { label: string; value: string; color: st
   )
 }
 
-function SectionHeader({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 style={{
-      margin: '0 0 12px',
-      fontSize: 12, fontWeight: 700,
-      color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em',
-    }}>
-      {children}
-    </h2>
-  )
-}
-
 export function PoliciesPage({ currentUser, onLogout }: Props) {
   const [policies, setPolicies] = useState<SLAPolicy[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState('')
 
   useEffect(() => {
     getPolicies()
-      .then((res: PaginatedResponse<SLAPolicy>) => setPolicies(res.results))
-      .catch(() => setError('Failed to load policies.'))
+      .then(res => {
+        if (Array.isArray(res)) {
+          setPolicies(res)
+        } else {
+          setPolicies(res?.results ?? [])
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load policies:', err?.response?.data ?? err)
+        setError('Failed to load policies.')
+      })
       .finally(() => setLoading(false))
   }, [])
 
-  const activePolicies = policies.filter(p => p.is_active)
+  // Safe even if state is [] — no crash risk
+  const activePolicies   = policies.filter(p => p.is_active)
   const inactivePolicies = policies.filter(p => !p.is_active)
 
   return (
@@ -123,27 +113,21 @@ export function PoliciesPage({ currentUser, onLogout }: Props) {
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: '#0f172a' }}>
-            SLA Policies
-          </h1>
+          <h1 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 700, color: '#0f172a' }}>SLA Policies</h1>
           <p style={{ margin: 0, fontSize: 13, color: '#64748b' }}>
-            {policies.length} polic{policies.length !== 1 ? 'ies' : 'y'} configured for {currentUser.tenant_name}
+            {policies.length} polic{policies.length !== 1 ? 'ies' : 'y'} for {currentUser.tenant_name}
           </p>
         </div>
 
         {loading && <p style={{ color: '#64748b', fontSize: 14 }}>Loading…</p>}
-        {error && <p style={{ color: '#ef4444', fontSize: 14 }}>{error}</p>}
+        {error   && <p style={{ color: '#ef4444', fontSize: 14 }}>{error}</p>}
 
         {!loading && !error && (
           <>
             {activePolicies.length > 0 && (
               <>
                 <SectionHeader>Active Policies</SectionHeader>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                  gap: 14, marginBottom: 28,
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14, marginBottom: 28 }}>
                   {activePolicies.map(p => <PolicyCard key={p.id} policy={p} />)}
                 </div>
               </>
@@ -151,11 +135,7 @@ export function PoliciesPage({ currentUser, onLogout }: Props) {
             {inactivePolicies.length > 0 && (
               <>
                 <SectionHeader>Inactive Policies</SectionHeader>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                  gap: 14,
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14 }}>
                   {inactivePolicies.map(p => <PolicyCard key={p.id} policy={p} />)}
                 </div>
               </>
@@ -169,5 +149,16 @@ export function PoliciesPage({ currentUser, onLogout }: Props) {
         )}
       </div>
     </div>
+  )
+}
+
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 style={{
+      margin: '0 0 12px', fontSize: 12, fontWeight: 700,
+      color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em',
+    }}>
+      {children}
+    </h2>
   )
 }

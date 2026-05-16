@@ -60,16 +60,19 @@ export function Navbar({ currentUser, onLogout }: Props) {
             {currentUser.role}
           </span>
         </span>
-        <button onClick={handleLogout} style={{
-          padding: '5px 14px',
-          border: '1px solid #e2e8f0',
-          borderRadius: 6,
-          background: '#fff',
-          cursor: 'pointer',
-          fontSize: 13,
-          color: '#374151',
-          fontWeight: 500,
-        }}>
+        <button
+          onClick={handleLogout}
+          style={{
+            padding: '5px 14px',
+            border: '1px solid #e2e8f0',
+            borderRadius: 6,
+            background: '#fff',
+            cursor: 'pointer',
+            fontSize: 13,
+            color: '#374151',
+            fontWeight: 500,
+          }}
+        >
           Sign out
         </button>
       </div>

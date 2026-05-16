@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { FormEvent } from 'react'
-import { createTicket } from '../api/tickets'
-import { getPolicies } from '../api/policies'
-import type { SLAPolicy, PaginatedResponse } from '../types'
+import { createTicket, getPolicies } from '../api/tickets'
+import type { SLAPolicy } from '../types'
 
 interface Props {
   onClose: () => void
@@ -10,18 +9,26 @@ interface Props {
 }
 
 export function CreateTicketModal({ onClose, onCreated }: Props) {
-  const [title, setTitle] = useState('')
+  const [title, setTitle]           = useState('')
   const [description, setDescription] = useState('')
-  const [priority, setPriority] = useState('medium')
+  const [priority, setPriority]     = useState('medium')
   const [slaPolicyId, setSlaPolicyId] = useState('')
-  const [policies, setPolicies] = useState<SLAPolicy[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [policies, setPolicies]     = useState<SLAPolicy[]>([])
+  const [loading, setLoading]       = useState(false)
+  const [error, setError]           = useState('')
 
   useEffect(() => {
     getPolicies()
-      .then((res: PaginatedResponse<SLAPolicy>) => setPolicies(res.results))
-      .catch(() => {})
+      .then(res => {
+        if (Array.isArray(res)) {
+          setPolicies(res)
+        } else {
+          setPolicies(res?.results ?? [])
+        }
+      })
+      .catch(err => {
+        console.error('Policies fetch failed:', err?.response?.data ?? err)
+      })
   }, [])
 
   const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -61,8 +68,7 @@ export function CreateTicketModal({ onClose, onCreated }: Props) {
         position: 'fixed', inset: 0,
         background: 'rgba(15, 23, 42, 0.45)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 200,
-        backdropFilter: 'blur(2px)',
+        zIndex: 200, backdropFilter: 'blur(2px)',
       }}
     >
       <div style={{
@@ -71,9 +77,7 @@ export function CreateTicketModal({ onClose, onCreated }: Props) {
         boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>
-            New Ticket
-          </h2>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>New Ticket</h2>
           <button onClick={onClose} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize: 20, color: '#94a3b8', padding: '0 4px', lineHeight: 1,
@@ -83,11 +87,9 @@ export function CreateTicketModal({ onClose, onCreated }: Props) {
         <form onSubmit={handleSubmit}>
           <Label>Title *</Label>
           <input
-            type="text"
-            value={title}
+            type="text" value={title}
             onChange={e => setTitle(e.target.value)}
-            required
-            placeholder="Brief summary of the issue"
+            required placeholder="Brief summary of the issue"
             style={inputStyle}
           />
 
@@ -95,8 +97,7 @@ export function CreateTicketModal({ onClose, onCreated }: Props) {
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
-            required
-            rows={4}
+            required rows={4}
             placeholder="Describe the issue in detail…"
             style={{ ...inputStyle, resize: 'vertical', height: 'auto' }}
           />
@@ -122,14 +123,10 @@ export function CreateTicketModal({ onClose, onCreated }: Props) {
             </div>
           </div>
 
-          {error && (
-            <p style={{ color: '#ef4444', fontSize: 13, margin: '0 0 12px' }}>{error}</p>
-          )}
+          {error && <p style={{ color: '#ef4444', fontSize: 13, margin: '0 0 12px' }}>{error}</p>}
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
-            <button type="button" onClick={onClose} style={cancelBtnStyle}>
-              Cancel
-            </button>
+            <button type="button" onClick={onClose} style={cancelBtnStyle}>Cancel</button>
             <button type="submit" disabled={loading} style={{
               ...submitBtnStyle,
               opacity: loading ? 0.7 : 1,
@@ -146,10 +143,7 @@ export function CreateTicketModal({ onClose, onCreated }: Props) {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{
-      display: 'block', fontSize: 13, fontWeight: 600,
-      color: '#374151', marginBottom: 6,
-    }}>
+    <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
       {children}
     </label>
   )
@@ -162,13 +156,11 @@ const inputStyle: React.CSSProperties = {
   marginBottom: 16, boxSizing: 'border-box',
   outline: 'none', background: '#fff',
 }
-
 const cancelBtnStyle: React.CSSProperties = {
   padding: '9px 18px', border: '1px solid #e2e8f0',
   borderRadius: 8, background: '#fff',
   cursor: 'pointer', fontSize: 14, color: '#374151', fontWeight: 500,
 }
-
 const submitBtnStyle: React.CSSProperties = {
   padding: '9px 22px', border: 'none',
   borderRadius: 8, background: '#6366f1',

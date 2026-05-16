@@ -17,9 +17,13 @@ client.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.clear()
-      // Reload so React re-reads auth state — avoids broken SPA navigation
-      window.location.reload()
+      // Clear tokens but let React Router handle the redirect via AuthContext
+      // (window.location.href forces a full page reload which breaks SPA routing)
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user')
+      // Fire a custom event that AuthContext listens to
+      window.dispatchEvent(new Event('auth:logout'))
     }
     return Promise.reject(error)
   }
