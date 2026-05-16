@@ -1,104 +1,171 @@
 # PolicySync
 
-PolicySync is a multi-tenant SLA enforcement platform built to simulate how real support systems handle ticket deadlines and escalations.
+[![CI](https://github.com/Kushagra11Singh/PolicySync-Multi-Tenant_SLA-Enforcement_and_Escalation-Engine/actions/workflows/ci.yml/badge.svg)](https://github.com/Kushagra11Singh/PolicySync-Multi-Tenant_SLA-Enforcement_and_Escalation-Engine/actions/workflows/ci.yml)
 
-The idea was simple:
+**PolicySync** is a full-stack **multi-tenant SLA enforcement and automated ticket escalation platform** built to simulate real-world enterprise support infrastructure.
 
-Different companies should be able to create their own SLA policies like:
+Organizations can define their own SLA policies for support tickets, track deadlines, and automatically escalate tickets when SLAs are close to breach or already breached.
 
-- Resolve high priority tickets within 4 hours
-- Escalate unresolved tickets to managers
-- Notify teams when deadlines are close
-
-The system tracks ticket deadlines, detects SLA breaches, triggers escalations, sends notifications, and keeps audit logs.
-
-This project was built mainly to learn backend architecture beyond simple CRUD apps.
+Each tenant is fully isolated — one company cannot access another company’s data.
 
 ---
+# Tech Stack
 
-## Tech Stack
-
-### Backend
+## Backend
+- Django
 - Django REST Framework
 - PostgreSQL
-- JWT Authentication
 - Celery
 - RabbitMQ
-- Pytest
+- Redis
+- drf-spectacular
+- pytest
 
-### Frontend
+## Frontend
 - React
 - TypeScript
 - Vite
-- React Query
 - Axios
 
-### Infra / DevOps
+## DevOps / Infra
+- Docker
 - Docker Compose
+- GitHub Actions
 - Prometheus
-- GitHub Actions CI
-
 ---
 
-## Architecture
+## Demo Preview
 
-### Policy Engine
-Handles:
-- tenants
-- users
-- tickets
-- SLA policies
-- core business logic
+### Dashboard
+![Dashboard Screenshot](./assets/dashboard.png)
 
-### Escalation Worker
-Consumes SLA breach events and processes escalations.
+### Ticket Management
+![Tickets Screenshot](./assets/tickets.png)
 
-### Notification Dispatcher
-Handles email/webhook notifications.
+### Escalation Flow
+![Escalation Screenshot](./assets/escalations.png)
 
-### Audit Logger
-Stores compliance logs for important actions.
-
+### Policies
+![Policies Screenshot](./assets/policies.png)
 ---
 
-## Features
+# Architecture
 
-- Multi-tenant architecture
-- Role based access control
-- SLA deadline tracking
-- Automatic escalations
-- RabbitMQ messaging
-- Dead letter queue retries
-- Audit logging
-- Prometheus monitoring
-- Integration testing
+![Architecture Diagram](./assets/architecture.png)
 
----
+### Flow
 
-## Current Status
-
-Working:
-- API running
-- Swagger docs working
-- Docker containers running
-- RabbitMQ + Celery working
-- Integration tests passing
-- Tenant isolation working
-
-Known issue:
-- 1 failing test related to `sla_resolution_deadline` serializer response field
-
----
-
-### Running locally
-
-### Start services
-
-```bash
-docker compose up --build
+```text
+React Frontend
+      |
+      v
+Django Policy Engine
+      |
+-----------------------------------
+| PostgreSQL
+| RabbitMQ
+| Prometheus
+-----------------------------------
+|
+├── Escalation Worker
+├── Notification Dispatcher
+└── Audit Logger
 ```
 
-### Frontend
+---
+
+# Features
+
+- Multi-tenant architecture
+- JWT authentication
+- Role-based access control
+- SLA policy creation
+- Automated ticket escalation
+- Notification workflows
+- Audit logging
+- Prometheus monitoring
+- Dockerized microservices
+- GitHub Actions CI/CD
+- Integration testing
+
+
+---
+
+# System Design
+
+## Multi-Tenant Isolation
+Every major model contains a tenant foreign key.
+
+Examples:
+- Users
+- Tickets
+- SLA Policies
+- Escalations
+- Audit Logs
+
+Querysets are filtered per tenant to ensure isolation.
+
+---
+
+## Async Escalation Flow
+
+```text
+Ticket Created
+    ↓
+SLA timer starts
+    ↓
+Celery Beat checks deadlines
+    ↓
+Escalation Worker processes breach
+    ↓
+Notification Dispatcher sends alerts
+    ↓
+Audit Logger records event
+```
+
+---
+
+# Microservices
+
+### 1. Policy Engine
+Main backend service handling:
+
+- users
+- tenants
+- tickets
+- policies
+- auth
+
+---
+
+### 2. Escalation Worker
+Processes SLA breaches asynchronously.
+
+---
+
+### 3. Notification Dispatcher
+Sends:
+
+- email alerts
+- webhook alerts
+
+---
+
+### 4. Audit Logger
+Stores compliance logs.
+
+---
+
+# Local Setup
+
+```bash
+git clone https://github.com/YOUR_USERNAME/policy-sync.git
+cd policy-sync
+cp .env.example .env
+docker compose up
+```
+
+Frontend:
 
 ```bash
 cd frontend
@@ -106,16 +173,88 @@ npm install
 npm run dev
 ```
 
-### Backend tests
+---
+
+# API Documentation
+
+Swagger docs:
 
 ```bash
-docker compose run --rm policy_engine pytest tests/ -v
+http://localhost:8001/api/docs/
 ```
-## Why I built this
-This project helped me learn:
 
-- distributed debugging
-- async workflows
-- service boundaries
+---
+
+# Prometheus Metrics
+
+```bash
+http://localhost:8001/metrics
+```
+
+---
+
+# Demo Credentials
+
+```text
+admin@acme.com
+DEMO1234!
+```
+
+---
+
+# Running Tests
+
+```bash
+docker compose exec policy_engine pytest
+```
+
+---
+
+# GitHub CI
+
+This project uses GitHub Actions for:
+
+- pytest
+- flake8
+- docker build verification
+
+Workflow file:
+
+```text
+.github/workflows/ci.yml
+```
+
+---
+
+# Known Issues
+
+- Agent assignment during ticket creation UI is not implemented yet
+- Superusers without tenant association cannot create tickets
+
+---
+
+# Future Improvements
+
+- Kubernetes deployment
+- WebSocket live ticket updates
+- Role analytics dashboard
+- Better notification templates
+- Cloud deployment on AWS/GCP
+
+---
+
+# Why this project matters
+
+This project simulates production-style backend architecture used by platforms like:
+
+- ServiceNow
+- Jira Service Management
+- Zendesk
+
+It demonstrates:
+
+- distributed systems thinking
+- async architecture
+- system design
 - observability
-- multi-tenant design
+- backend scalability patterns

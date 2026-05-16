@@ -37,3 +37,5 @@ rabbitmq_data/
 
 # Misc
 *.sqlite3
+
+helper.txt
