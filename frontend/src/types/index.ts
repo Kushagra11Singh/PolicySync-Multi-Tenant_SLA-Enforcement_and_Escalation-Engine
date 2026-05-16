@@ -7,18 +7,8 @@ export interface User {
   email: string
   full_name: string
   role: UserRole
-  tenant_name: string
+  tenant_name: string | null
   is_active: boolean
-  created_at: string
-}
-
-export interface Tenant {
-  id: string
-  name: string
-  slug: string
-  is_active: boolean
-  user_count: number
-  active_policies: number
   created_at: string
 }
 
@@ -31,6 +21,20 @@ export interface SLAPolicy {
   resolution_time_hours: number
   is_active: boolean
   open_ticket_count: number
+}
+
+export interface EscalationRule {
+  id: string
+  level: number
+  escalate_at_percent: number
+  escalate_to: string
+  escalate_to_email: string
+  escalate_to_name: string
+  is_active: boolean
+}
+
+export interface SLAPolicyDetail extends SLAPolicy {
+  escalation_rules: EscalationRule[]
 }
 
 export interface TicketListItem {
@@ -85,10 +89,4 @@ export interface PaginatedResponse<T> {
   next: string | null
   previous: string | null
   results: T[]
-}
-
-export interface AuthState {
-  access: string | null
-  refresh: string | null
-  user: User | null
 }

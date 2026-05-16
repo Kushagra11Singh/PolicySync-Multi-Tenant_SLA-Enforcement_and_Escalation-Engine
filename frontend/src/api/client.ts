@@ -5,7 +5,6 @@ const client = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Attach JWT from localStorage on every request
 client.interceptors.request.use((config) => {
   const access = localStorage.getItem('access_token')
   if (access) {
@@ -14,14 +13,13 @@ client.interceptors.request.use((config) => {
   return config
 })
 
-// On 401, clear tokens and redirect to login
 client.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
-      window.location.href = '/login'
+      localStorage.clear()
+      // Reload so React re-reads auth state — avoids broken SPA navigation
+      window.location.reload()
     }
     return Promise.reject(error)
   }
