@@ -1,9 +1,4 @@
-import os
-import django
 from shared.utils.logger import get_logger
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-django.setup()
 
 from config.celery import app
 from shared.models import EscalationLog, EscalationRule, Ticket, Tenant
@@ -42,28 +37,29 @@ def process_sla_escalation(self, ticket_id: str, rule_id: str, percent_elapsed: 
         return
 
     # Guard again — beat might have queued before another worker wrote the log
-    already_done = EscalationLog.objects.filter(ticket=ticket, level=rule.level).exists()
-    if already_done:
-        logger.info(
-            "escalation_already_processed",
-            extra={"ticket_id": ticket_id, "level": rule.level},
-        )
-        return
-
+    # With this (atomic get_or_create):
     reason = (
         f"SLA {percent_elapsed:.1f}% elapsed — "
         f"deadline was {ticket.sla_resolution_deadline.strftime('%Y-%m-%d %H:%M UTC')}"
     )
 
-    log = EscalationLog.objects.create(
+    log, created = EscalationLog.objects.get_or_create(
         ticket=ticket,
-        tenant=ticket.tenant,
-        rule=rule,
-        escalated_to=rule.escalate_to,
         level=rule.level,
-        reason=reason,
-        sla_percent_elapsed=percent_elapsed,
+        defaults={
+            "tenant": ticket.tenant,
+            "rule": rule,
+            "escalated_to": rule.escalate_to,
+            "reason": reason,
+            "sla_percent_elapsed": percent_elapsed,
+        },
     )
+    if not created:
+        logger.info(
+        "escalation_already_processed",
+        extra={"ticket_id": ticket_id, "level": rule.level},
+        )
+        return
 
     # Update the ticket's escalation state
     Ticket.objects.filter(id=ticket_id).update(

@@ -1,0 +1,45 @@
+ Container policy-sync-postgres-1 Running 
+ Container policy-sync-rabbitmq-1 Running 
+ Container policy-sync-rabbitmq-1 Waiting 
+ Container policy-sync-postgres-1 Waiting 
+ Container policy-sync-rabbitmq-1 Healthy 
+ Container policy-sync-postgres-1 Healthy 
+ Container policy-sync-policy_engine-run-a1344bbcc1d0 Creating 
+ Container policy-sync-policy_engine-run-a1344bbcc1d0 Created 
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-8.3.3, pluggy-1.6.0 -- /usr/local/bin/python3.11
+cachedir: .pytest_cache
+django: version: 5.1.4, settings: config.settings (from ini)
+rootdir: /app
+configfile: pytest.ini
+plugins: Faker-26.0.0, django-4.9.0
+collecting ... collected 8 items
+
+tests/test_escalation_integration.py::TestSLAEscalationIntegration::test_full_escalation_flow PASSED [ 12%]
+tests/test_escalation_integration.py::TestSLAEscalationIntegration::test_no_duplicate_escalation PASSED [ 25%]
+tests/test_tenants.py::TestTenantEndpoints::test_list_tenants_requires_system_admin PASSED [ 37%]
+tests/test_tenants.py::TestTenantEndpoints::test_unauthenticated_blocked PASSED [ 50%]
+tests/test_tickets.py::TestTicketCRUD::test_create_ticket_sets_sla_deadline PASSED [ 62%]
+tests/test_tickets.py::TestTicketCRUD::test_agent_sees_only_own_tickets PASSED [ 75%]
+tests/test_tickets.py::TestTicketCRUD::test_cross_tenant_isolation PASSED [ 87%]
+tests/test_tickets.py::TestTicketCRUD::test_resolve_ticket PASSED        [100%]
+
+=============================== warnings summary ===============================
+tests/test_tenants.py::TestTenantEndpoints::test_list_tenants_requires_system_admin
+tests/test_tenants.py::TestTenantEndpoints::test_unauthenticated_blocked
+tests/test_tickets.py::TestTicketCRUD::test_create_ticket_sets_sla_deadline
+tests/test_tickets.py::TestTicketCRUD::test_agent_sees_only_own_tickets
+tests/test_tickets.py::TestTicketCRUD::test_cross_tenant_isolation
+tests/test_tickets.py::TestTicketCRUD::test_resolve_ticket
+  /usr/local/lib/python3.11/site-packages/django/core/handlers/base.py:61: UserWarning: No directory at: /app/staticfiles/
+    mw_instance = middleware(adapted_handler)
+
+tests/test_tenants.py::TestTenantEndpoints::test_list_tenants_requires_system_admin
+tests/test_tenants.py::TestTenantEndpoints::test_list_tenants_requires_system_admin
+tests/test_tenants.py::TestTenantEndpoints::test_list_tenants_requires_system_admin
+tests/test_tenants.py::TestTenantEndpoints::test_list_tenants_requires_system_admin
+  /usr/local/lib/python3.11/site-packages/rest_framework/urlpatterns.py:108: RemovedInDjango60Warning: Converter 'drf_format_suffix' is already registered. Support for overriding registered converters is deprecated and will be removed in Django 6.0.
+    register_converter(suffix_converter, converter_name)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 8 passed, 10 warnings in 3.13s ========================

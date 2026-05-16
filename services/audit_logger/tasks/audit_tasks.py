@@ -1,9 +1,3 @@
-import os
-import django
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-django.setup()
-
 from config.celery import app
 from shared.models import AuditLog, Tenant
 from shared.utils.logger import get_logger

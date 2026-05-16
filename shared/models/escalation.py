@@ -68,6 +68,7 @@ class EscalationLog(models.Model):
 
     class Meta:
         db_table = "escalation_logs"
+        unique_together = [("ticket", "level")]
         indexes = [
             models.Index(fields=["tenant", "created_at"]),
             models.Index(fields=["ticket"]),

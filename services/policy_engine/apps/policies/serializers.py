@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from shared.models import SLAPolicy, EscalationRule, User
+from shared.models import SLAPolicy, EscalationRule
 
 
 class EscalationRuleSerializer(serializers.ModelSerializer):

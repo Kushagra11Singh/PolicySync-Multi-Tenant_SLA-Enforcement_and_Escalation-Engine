@@ -1,6 +1,4 @@
 import pytest
-from django.utils import timezone
-from datetime import timedelta
 
 
 @pytest.mark.django_db
@@ -43,7 +41,7 @@ class TestTicketCRUD:
     def test_cross_tenant_isolation(
         self, admin_client, other_tenant, sla_policy
     ):
-        from tests.factories import TicketFactory, UserFactory, SLAPolicyFactory
+        from tests.factories import TicketFactory, SLAPolicyFactory
         other_policy = SLAPolicyFactory(tenant=other_tenant)
         TicketFactory(tenant=other_tenant, sla_policy=other_policy)
 

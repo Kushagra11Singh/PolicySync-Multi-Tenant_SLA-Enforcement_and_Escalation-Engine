@@ -145,5 +145,22 @@ services:
       SERVICE_NAME: audit_worker
     command: celery -A config worker -l info -Q audit --concurrency=2
 
+  policy_engine_worker:
+    build:
+      context: ./services/policy_engine
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./services/policy_engine:/app
+      - ./shared:/app/shared
+    environment:
+      PYTHONPATH: /app
+      SERVICE_NAME: policy_engine_worker
+    command: celery -A config worker -l info -Q default --concurrency=2
+
 volumes:
   postgres_data:

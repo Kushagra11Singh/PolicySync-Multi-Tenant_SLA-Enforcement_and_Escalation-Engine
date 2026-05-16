@@ -11,7 +11,7 @@ app.conf.beat_schedule = {
     "sla-breach-check-60s": {
         "task": "apps.tickets.tasks.check_sla_breaches",
         "schedule": 60.0,
-        "options": {"queue": "escalation"},
+        "options": {"queue": "default"},
     },
 }
 

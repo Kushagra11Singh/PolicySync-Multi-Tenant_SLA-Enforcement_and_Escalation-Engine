@@ -3,7 +3,7 @@ from shared.models import User, UserRole
 
 
 class UserSerializer(serializers.ModelSerializer):
-    tenant_name = serializers.CharField(source="tenant.name", read_only=True)
+    tenant_name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -12,6 +12,9 @@ class UserSerializer(serializers.ModelSerializer):
             "tenant_name", "is_active", "created_at",
         ]
         read_only_fields = ["id", "created_at", "tenant_name"]
+
+    def get_tenant_name(self, obj) -> str | None:
+        return obj.tenant.name if obj.tenant_id else None
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

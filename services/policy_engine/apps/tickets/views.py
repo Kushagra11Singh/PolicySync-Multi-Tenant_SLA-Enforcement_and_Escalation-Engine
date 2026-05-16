@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from shared.models import Ticket, TicketComment, TicketStatus
+from shared.models import Ticket, TicketStatus
 from shared.utils.audit import emit_audit_event
 from shared.utils.logger import get_logger
 from .serializers import (
@@ -21,10 +21,10 @@ class TicketViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
-        if self.action == "create":
-            return TicketCreateSerializer
         if self.action in ("retrieve", "update", "partial_update"):
             return TicketDetailSerializer
+        if self.action == "create":
+            return TicketCreateSerializer
         return TicketListSerializer
 
     def get_queryset(self):
@@ -36,42 +36,58 @@ class TicketViewSet(viewsets.ModelViewSet):
             .filter(tenant=user.tenant)
         )
 
-        # Agents only see tickets assigned to them
         if user.role == "agent":
             qs = qs.filter(assigned_agent=user)
 
-        status_filter = self.request.query_params.get("status")
-        if status_filter:
-            qs = qs.filter(status=status_filter)
+        if self.request.query_params.get("status"):
+            qs = qs.filter(status=self.request.query_params["status"])
 
-        priority_filter = self.request.query_params.get("priority")
-        if priority_filter:
-            qs = qs.filter(priority=priority_filter)
+        if self.request.query_params.get("priority"):
+            qs = qs.filter(priority=self.request.query_params["priority"])
 
         if self.request.query_params.get("escalated") == "true":
             qs = qs.filter(is_escalated=True)
 
         return qs.order_by("-created_at")
 
-    def perform_create(self, serializer):
-        ticket = serializer.save()
+    def create(self, request, *args, **kwargs):
+        """
+        Accept input via TicketCreateSerializer, but respond with TicketDetailSerializer
+        so the caller always gets the full object back — including computed fields like
+        sla_resolution_deadline that are set during save().
+        """
+        input_serializer = TicketCreateSerializer(
+            data=request.data, context={"request": request}
+        )
+        input_serializer.is_valid(raise_exception=True)
+        ticket = input_serializer.save()
+
         logger.info(
             "ticket_created",
             extra={
                 "ticket_id": str(ticket.id),
                 "tenant_id": str(ticket.tenant_id),
-                "user_id": str(self.request.user.id),
+                "user_id": str(request.user.id),
             },
         )
         emit_audit_event(
             action="ticket.created",
             resource_type="Ticket",
             resource_id=ticket.id,
-            user=self.request.user,
+            user=request.user,
             tenant=ticket.tenant,
             metadata={"title": ticket.title, "priority": ticket.priority},
-            request=self.request,
+            request=request,
         )
+
+        output_serializer = TicketDetailSerializer(ticket, context={"request": request})
+        headers = self.get_success_headers(output_serializer.data)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        # Not called anymore — create() above handles the full flow.
+        # Kept so DRF's OpenAPI introspection doesn't break.
+        pass
 
     @action(detail=True, methods=["patch"])
     def resolve(self, request, pk=None):
@@ -90,9 +106,7 @@ class TicketViewSet(viewsets.ModelViewSet):
             "ticket.resolved", "Ticket", ticket.id,
             user=request.user, tenant=ticket.tenant, request=request,
         )
-        return Response(
-            TicketDetailSerializer(ticket, context={"request": request}).data
-        )
+        return Response(TicketDetailSerializer(ticket, context={"request": request}).data)
 
     @action(detail=True, methods=["post"])
     def comment(self, request, pk=None):
@@ -101,7 +115,6 @@ class TicketViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         comment = serializer.save(ticket=ticket, author=request.user)
 
-        # First reply from an agent records the response time
         if not ticket.first_response_at and request.user.role == "agent":
             ticket.first_response_at = comment.created_at
             ticket.save(update_fields=["first_response_at"])

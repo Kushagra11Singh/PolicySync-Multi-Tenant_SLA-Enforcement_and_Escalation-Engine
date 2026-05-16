@@ -1,9 +1,3 @@
-import os
-import django
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
-django.setup()
-
 from django.utils import timezone
 from config.celery import app
 from shared.models import EscalationLog, EscalationNotification, NotificationChannel

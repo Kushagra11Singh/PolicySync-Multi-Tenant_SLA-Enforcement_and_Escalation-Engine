@@ -61,7 +61,7 @@ jobs:
           SECRET_KEY: ci-test-secret-key-not-real
           DEBUG: "True"
           ALLOWED_HOSTS: localhost,127.0.0.1
-          PYTHONPATH: services/policy_engine
+          PYTHONPATH: ${{ github.workspace }}/services/policy_engine
           SERVICE_NAME: policy_engine
         run: |
           cd services/policy_engine

@@ -3,12 +3,11 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenRefreshView
 
 from shared.models import User
 from shared.utils.logger import get_logger
 from .serializers import UserSerializer, UserCreateSerializer, LoginSerializer
-from apps.tenants.permissions import IsTenantAdmin, IsTenantManager
+from apps.tenants.permissions import IsTenantAdmin
 
 logger = get_logger(__name__)
 
@@ -74,7 +73,6 @@ class UserViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_destroy(self, instance):
-        # Never hard-delete users — soft delete only
         instance.is_active = False
         instance.save(update_fields=["is_active"])
         logger.info("user_deactivated", extra={"user_id": str(instance.id)})
