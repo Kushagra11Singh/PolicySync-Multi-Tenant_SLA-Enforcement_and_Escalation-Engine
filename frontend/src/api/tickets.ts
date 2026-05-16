@@ -56,6 +56,6 @@ export const getEscalationLogs = async (ticketId?: string): Promise<PaginatedRes
 }
 
 export const getPolicies = async (): Promise<PaginatedResponse<SLAPolicy>> => {
-  const res = await client.get<PaginatedResponse<SLAPolicy>>('/policies/')
+  const res = await client.get<PaginatedResponse<SLAPolicy>>('/policies/sla/')
   return res.data
 }
